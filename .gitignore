@@ -1,6 +1,9 @@
 __pycache__/
-*.pyc
-patients.db
+*.py[cod]
+*$py.class
+.venv/
 .env
-venv/
+patients.db
+best_model.pth
+*.pth
 .DS_Store
