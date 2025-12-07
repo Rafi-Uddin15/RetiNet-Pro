@@ -1,9 +1,11 @@
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-.env
-patients.db
-best_model.pth
-*.pth
-.DS_Store
+# Ignore everything by default
+*
+
+# Allow specific files
+!app.py
+!requirements.txt
+!best_model.pth
+!Dockerfile
+!RetiNet_Research_Main.ipynb
+!README.md
+!.gitignore
