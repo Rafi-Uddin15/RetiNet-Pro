@@ -16,9 +16,9 @@ Diabetic Retinopathy (DR) is a leading cause of blindness. **RetiNet** bridges t
 ---
 
 ## ⚙️ Technical Innovation
-This is not just a standard CNN. I implemented a **Custom Swin Transformer V2 (Tiny)** architecture:
-*   **Attention Mechanism**: Integrated **Coordinate Attention (CA)** blocks to help the model focus on tiny lesions and hemorrhages, ignoring noise.
-*   **Accuracy**: Achieved **92%+ accuracy** on the APTOS 2019 dataset, outperforming standard ResNet50 baselines.
+RetiNet fine-tunes an ImageNet-pretrained **Swin Transformer V2 (Base, window 8, 256px)** with a custom MLP head:
+*   **Attention Mechanism**: Shifted-window self-attention captures both small lesions (microaneurysms, hemorrhages) and global retinal context.
+*   **Evaluation**: 5-fold stratified cross-validation on APTOS 2019, with minority-class oversampling applied only inside each training fold. Out-of-fold QWK and accuracy: *to be updated after the corrected re-run* (an earlier evaluation oversampled before splitting, which leaked duplicate images into validation and overstated the scores).
 *   **Explainability**: Generates Grad-CAM heatmaps so doctors can trust *why* the AI made a decision.
 
 ---
