@@ -264,7 +264,7 @@ with tab_home:
         <h3 style="color: #555;">AI-Powered Diabetic Retinopathy Screening System</h3>
         <p style="font-size: 1.2em; color: #666;">
             Early detection saves sight. RetiNet leverages state-of-the-art <b>Vision Transformers</b> 
-            to identify retinal lesions with dermatologist-level accuracy.
+            to grade diabetic retinopathy severity from fundus photographs.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -272,7 +272,7 @@ with tab_home:
     # Key Features Grid
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.info("**High Precision**\n\nAchieves **89.6% Accuracy** and **0.956 Kappa** on clinical benchmarks.")
+        st.info("**Validated Model**\n\nEvaluated with leakage-free 5-fold cross-validation on APTOS 2019 (see About tab).")
     with c2:
         st.info("**Explainable AI**\n\nUtilizes **Grad-CAM** technology to visualize exactly where lesions are located.")
     with c3:
@@ -374,11 +374,13 @@ with tab_about:
     
     st.subheader("Performance Metrics")
     st.markdown("""
+    Out-of-fold results from 5-fold stratified cross-validation on APTOS 2019 (3,662 images):
+
     | Metric | Score |
     | :--- | :--- |
-    | **Accuracy** | 89.62% |
-    | **Quadratic Kappa** | 0.9556 |
-    | **Sensitivity (Severe)** | 97.4% |
+    | **Accuracy** | TBD (re-run pending) |
+    | **Quadratic Kappa** | TBD (re-run pending) |
+    | **Sensitivity (Severe)** | TBD (re-run pending) |
     """)
     
     st.warning("**Disclaimer**: This tool is for research and educational purposes only. Not FDA approved for clinical diagnosis.")
