@@ -126,7 +126,13 @@ def preprocess_image(image):
     # Ben Graham Preprocessing
     image = np.array(image.convert("RGB"))
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    
+
+    # Crop the black border around the retina, exactly as in training (load_ben_color)
+    mask = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) > 7
+    if mask.any():
+        rows, cols = np.where(mask.any(axis=1))[0], np.where(mask.any(axis=0))[0]
+        image = image[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
+
     # Resize first
     image = cv2.resize(image, (256, 256))
     
