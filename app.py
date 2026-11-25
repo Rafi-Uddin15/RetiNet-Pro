@@ -154,20 +154,20 @@ def preprocess_image(image):
 
 # --- 5. VISUALIZATION ENGINE ---
 def generate_explanation(model, input_tensor, original_img):
-    # Use Stage 3 (layers[-2]) for High-Res Heatmaps
-    target_layers = [model.backbone.layers[-2].blocks[-1]] 
+    # 16x16 stage adds detail; final norm (what the classifier pools) adds class focus. Same as the notebook.
+    target_layers = [model.backbone.layers[-2], model.backbone.norm]
     cam = GradCAM(model=model, target_layers=target_layers, reshape_transform=swinT_reshape_transform)
-    
-    # Output class (predicted)
-    targets = None # Auto-select highest score
-    
-    # Generate (Smoothed)
-    grayscale_cam = cam(input_tensor=input_tensor, targets=targets, eigen_smooth=True, aug_smooth=True)[0]
-    
-    # Normalized image for overlay
+
+    # targets=None explains the predicted class. No eigen_smooth: its principal component has an
+    # arbitrary sign and is class-agnostic, so it can light up background instead of lesions.
+    grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]
+    retina = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY) > 10  # ignore the black border
+    grayscale_cam = grayscale_cam * retina
+
     img_float = original_img.astype(np.float32) / 255.0
-    visualization = show_cam_on_image(img_float, grayscale_cam, use_rgb=True)
-    return visualization
+    vis = show_cam_on_image(img_float, grayscale_cam, use_rgb=True, image_weight=0.6)
+    vis[~retina] = original_img[~retina]  # keep the border black instead of colormap blue
+    return vis
 
 # --- 6. MEDICAL LOGIC & PDF REPORT ---
 def get_recommendation(prediction):
@@ -358,7 +358,7 @@ with tab_analysis:
         st.subheader("🔍 Clinical Explanation (Grad-CAM)")
         st.markdown("The AI highlights regions of interest (lesions, exudates) used for this diagnosis.")
         
-        cam_img = generate_explanation(model, input_tensor, img_ben)
+        cam_img = generate_explanation(model, input_tensor, img_rgb)  # heatmap on the real (cropped) photo
         
         col_cam1, col_cam2 = st.columns(2)
         with col_cam1:
@@ -367,7 +367,7 @@ with tab_analysis:
             st.image(cam_img, caption="AI Attention Heatmap", use_container_width=True)
 
     elif uploaded_file is None:
-        st.info("👋 Select the **Browes files** button to choose a retinal image.")
+        st.info("👋 Select the **Upload** button to choose a retinal image.")
 
 # --- TAB 3: ABOUT ---
 with tab_about:
