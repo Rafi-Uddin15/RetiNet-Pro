@@ -378,9 +378,13 @@ with tab_about:
 
     | Metric | Score |
     | :--- | :--- |
-    | **Accuracy** | TBD (re-run pending) |
-    | **Quadratic Kappa** | TBD (re-run pending) |
-    | **Sensitivity (Severe)** | TBD (re-run pending) |
+    | **5-grade accuracy** | 83.6% |
+    | **Quadratic Weighted Kappa** | 0.907 |
+    | **Any DR (grade 1+): sensitivity / specificity** | 99.1% / 98.1% |
+    | **Referable DR (grade 2+): sensitivity / specificity** | 89.9% / 96.0% |
+    | **Severe (grade 3) / Proliferative (grade 4) recall** | 52.8% / 58.0% |
+
+    Exact grading of the severe end is the weakest point: most misses are placed one grade lower.
     """)
     
     st.warning("**Disclaimer**: This tool is for research and educational purposes only. Not FDA approved for clinical diagnosis.")
