@@ -18,7 +18,15 @@ Diabetic Retinopathy (DR) is a leading cause of blindness. **RetiNet** bridges t
 ## ⚙️ Technical Innovation
 RetiNet fine-tunes an ImageNet-pretrained **Swin Transformer V2 (Base, window 8, 256px)** with a custom MLP head:
 *   **Attention Mechanism**: Shifted-window self-attention captures both small lesions (microaneurysms, hemorrhages) and global retinal context.
-*   **Evaluation**: 5-fold stratified cross-validation on APTOS 2019, with minority-class oversampling applied only inside each training fold. Out-of-fold QWK and accuracy: *to be updated after the corrected re-run* (an earlier evaluation oversampled before splitting, which leaked duplicate images into validation and overstated the scores).
+*   **Evaluation**: 5-fold stratified cross-validation on APTOS 2019, with minority-class oversampling applied only inside each training fold. An earlier evaluation oversampled before splitting, which leaked duplicate images into validation and overstated the scores; the numbers below are from the corrected run.
+
+| Out-of-fold metric (3,662 images, each scored once) | Score |
+| :--- | :--- |
+| 5-grade accuracy | 83.6% |
+| Quadratic Weighted Kappa | 0.907 |
+| Any DR (grade 1+): sensitivity / specificity | 99.1% / 98.1% |
+| Referable DR (grade 2+): sensitivity / specificity | 89.9% / 96.0% |
+| Severe (grade 3) / Proliferative (grade 4) recall | 52.8% / 58.0% |
 *   **Explainability**: Generates Grad-CAM heatmaps so doctors can trust *why* the AI made a decision.
 
 ---

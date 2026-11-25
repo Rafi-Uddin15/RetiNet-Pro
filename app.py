@@ -126,7 +126,13 @@ def preprocess_image(image):
     # Ben Graham Preprocessing
     image = np.array(image.convert("RGB"))
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    
+
+    # Crop the black border around the retina, exactly as in training (load_ben_color)
+    mask = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) > 7
+    if mask.any():
+        rows, cols = np.where(mask.any(axis=1))[0], np.where(mask.any(axis=0))[0]
+        image = image[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
+
     # Resize first
     image = cv2.resize(image, (256, 256))
     
@@ -148,20 +154,20 @@ def preprocess_image(image):
 
 # --- 5. VISUALIZATION ENGINE ---
 def generate_explanation(model, input_tensor, original_img):
-    # Use Stage 3 (layers[-2]) for High-Res Heatmaps
-    target_layers = [model.backbone.layers[-2].blocks[-1]] 
+    # 16x16 stage adds detail; final norm (what the classifier pools) adds class focus. Same as the notebook.
+    target_layers = [model.backbone.layers[-2], model.backbone.norm]
     cam = GradCAM(model=model, target_layers=target_layers, reshape_transform=swinT_reshape_transform)
-    
-    # Output class (predicted)
-    targets = None # Auto-select highest score
-    
-    # Generate (Smoothed)
-    grayscale_cam = cam(input_tensor=input_tensor, targets=targets, eigen_smooth=True, aug_smooth=True)[0]
-    
-    # Normalized image for overlay
+
+    # targets=None explains the predicted class. No eigen_smooth: its principal component has an
+    # arbitrary sign and is class-agnostic, so it can light up background instead of lesions.
+    grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]
+    retina = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY) > 10  # ignore the black border
+    grayscale_cam = grayscale_cam * retina
+
     img_float = original_img.astype(np.float32) / 255.0
-    visualization = show_cam_on_image(img_float, grayscale_cam, use_rgb=True)
-    return visualization
+    vis = show_cam_on_image(img_float, grayscale_cam, use_rgb=True, image_weight=0.6)
+    vis[~retina] = original_img[~retina]  # keep the border black instead of colormap blue
+    return vis
 
 # --- 6. MEDICAL LOGIC & PDF REPORT ---
 def get_recommendation(prediction):
@@ -352,7 +358,7 @@ with tab_analysis:
         st.subheader("🔍 Clinical Explanation (Grad-CAM)")
         st.markdown("The AI highlights regions of interest (lesions, exudates) used for this diagnosis.")
         
-        cam_img = generate_explanation(model, input_tensor, img_ben)
+        cam_img = generate_explanation(model, input_tensor, img_rgb)  # heatmap on the real (cropped) photo
         
         col_cam1, col_cam2 = st.columns(2)
         with col_cam1:
@@ -361,7 +367,7 @@ with tab_analysis:
             st.image(cam_img, caption="AI Attention Heatmap", use_container_width=True)
 
     elif uploaded_file is None:
-        st.info("👋 Select the **Browes files** button to choose a retinal image.")
+        st.info("👋 Select the **Upload** button to choose a retinal image.")
 
 # --- TAB 3: ABOUT ---
 with tab_about:
@@ -378,9 +384,13 @@ with tab_about:
 
     | Metric | Score |
     | :--- | :--- |
-    | **Accuracy** | TBD (re-run pending) |
-    | **Quadratic Kappa** | TBD (re-run pending) |
-    | **Sensitivity (Severe)** | TBD (re-run pending) |
+    | **5-grade accuracy** | 83.6% |
+    | **Quadratic Weighted Kappa** | 0.907 |
+    | **Any DR (grade 1+): sensitivity / specificity** | 99.1% / 98.1% |
+    | **Referable DR (grade 2+): sensitivity / specificity** | 89.9% / 96.0% |
+    | **Severe (grade 3) / Proliferative (grade 4) recall** | 52.8% / 58.0% |
+
+    Exact grading of the severe end is the weakest point: most misses are placed one grade lower.
     """)
     
     st.warning("**Disclaimer**: This tool is for research and educational purposes only. Not FDA approved for clinical diagnosis.")
